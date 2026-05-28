@@ -22,7 +22,6 @@ type Props = {
 export default function MapView({ hospitals }: Props) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  // Store marker instances keyed by hospital id for easy lookup
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
 
   // Initialise map once
@@ -32,25 +31,24 @@ export default function MapView({ hospitals }: Props) {
     map.current = new mapboxgl.Map({
       container: mapContainer.current!,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [3.3792, 6.5244], // Lagos default
+      center: [3.3792, 6.5244],
       zoom: 10,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
   }, []);
 
-  // Re-render markers whenever the hospital list changes
+  // Re-render markers
   useEffect(() => {
     if (!map.current) return;
 
-    // Remove all previous markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current.clear();
 
     hospitals.forEach((h) => {
       if (!h.latitude || !h.longitude) return;
 
-      // Custom red pin element
+      // red pin
       const el = document.createElement("div");
       el.style.cursor = "pointer";
       el.style.width = "28px";
@@ -96,7 +94,7 @@ export default function MapView({ hospitals }: Props) {
       markersRef.current.set(h.id, marker);
     });
 
-    // Fit map to show all markers
+    // to fit all on screen
     const withCoords = hospitals.filter((h) => h.latitude && h.longitude);
     if (withCoords.length > 0 && map.current) {
       const bounds = new mapboxgl.LngLatBounds();

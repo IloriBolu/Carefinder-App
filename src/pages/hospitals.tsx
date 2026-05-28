@@ -22,30 +22,30 @@ type Hospital = {
 export default function Hospitals() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [ownershipFilter, setOwnershipFilter] = useState(searchParams.get("ownership") || "");
-  const [lgaFilter, setLgaFilter] = useState(searchParams.get("lga") || "");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [search, setSearch] = useState<string>(searchParams.get("search") || "");
+  const [ownershipFilter, setOwnershipFilter] = useState<string>(searchParams.get("ownership") || "");
+  const [lgaFilter, setLgaFilter] = useState<string>(searchParams.get("lga") || "");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [radius, setRadius] = useState<number>(Number(searchParams.get("radius")) || 10);
   const [userLocation, setUserLocation] = useState<{
   lat: number;
   lng: number;
 } | null>(null);
-  const [specialtyFilter, setSpecialtyFilter] = useState(searchParams.get("specialty") || "");
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>(searchParams.get("specialty") || "");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [selectedForEmail, setSelectedForEmail] = useState<string[]>([]);
-  const [email, setEmail] = useState("");
-  const [cityFilter, setCityFilter] = useState(searchParams.get("city") || "");
+  const [email, setEmail] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>(searchParams.get("city") || "");
   const navigate = useNavigate();
 
   useEffect(() => {
   const params: Record<string, string> = {};
 
-  if (search) params.search = search;
-  if (ownershipFilter) params.ownership = ownershipFilter;
-  if (lgaFilter) params.lga = lgaFilter;
-  if (specialtyFilter) params.specialty = specialtyFilter;
+  if (search !== "") params.search = search;
+  if (ownershipFilter !== "") params.ownership = ownershipFilter;
+  if (lgaFilter !== "") params.lga = lgaFilter;
+  if (specialtyFilter !== "") params.specialty = specialtyFilter;
   if (radius) params.radius = radius.toString();
 
   setSearchParams(params);
@@ -58,20 +58,24 @@ export default function Hospitals() {
 ]);
 
   // Fetch all hospitals or nearby ones if coords are provided
-  async function fetchHospitals(lat?: number, lng?: number, km = radius) {
+  async function fetchHospitals(lat?: number, lng?: number, km: number = radius) {
     setLoading(true);
     setLocationError(null);
 
     let data, error;
 
     if (lat !== undefined && lng !== undefined) {
-      ({ data, error } = await supabase.rpc("nearby_hospitals", {
-        lat,
-        lng,
+      const response = await supabase.rpc("nearby_hospitals", {
+        lat: lat,
+        lng: lng,
         radius_meters: km * 1000,
-      }));
+      });
+      data = response.data;
+      error = response.error;
     } else {
-      ({ data, error } = await supabase.from("hospitals").select("*"));
+      const response = await supabase.from("hospitals").select("*");
+      data = response.data;
+      error = response.error;
     }
 
     if (error) {
@@ -80,36 +84,45 @@ export default function Hospitals() {
       return;
     }
 
-    setHospitals(data || []);
+    if (data) {
+      setHospitals(data);
+    } else {
+      setHospitals([]);
+    }
     setLoading(false);
   }
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    let cancelled: boolean = false;
+    async function getInitialHospitals() {
       const { data, error } = await supabase.from("hospitals").select("*");
-      if (cancelled) return;
+      if (cancelled === true) return;
       if (error) { console.error(error); setLoading(false); return; }
-      setHospitals(data || []);
+      if (data) {
+        setHospitals(data);
+      } else {
+        setHospitals([]);
+      }
       setLoading(false);
-    })();
+    }
+    getInitialHospitals();
     return () => { cancelled = true; };
   }, []);
 
-function getLocation(km = radius) {
+function getLocation(km: number = radius) {
   if (!navigator.geolocation) {
     setLocationError("Geolocation is not supported by your browser.");
     return;
   }
   setLoading(true);
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      setUserLocation({ lat, lng });
+    (pos: GeolocationPosition) => {
+      const lat: number = pos.coords.latitude;
+      const lng: number = pos.coords.longitude;
+      setUserLocation({ lat: lat, lng: lng });
       fetchHospitals(lat, lng, km);
     },
-    (err) => {
+    (err: GeolocationPositionError) => {
       setLoading(false);
       if (err.code === err.PERMISSION_DENIED) {
         setLocationError("Location access was denied. Please allow it in your browser settings.");
@@ -123,38 +136,69 @@ function getLocation(km = radius) {
   );
 }
 
-  // Re-fetch when radius changes, but only if we already have a location
   useEffect(() => {
-    if (userLocation) {
+    if (userLocation !== null) {
       fetchHospitals(userLocation.lat, userLocation.lng, radius);
     }
   }, [radius]);
 
-  const ownership = [...new Set(hospitals.map((h) => h.ownership_type))].sort();
-  const specialties = [...new Set(hospitals.flatMap((h) => h.specialties || [])),].sort();
+  const uniqueOwnerships: string[] = [];
+  hospitals.forEach((h) => {
+    if (!uniqueOwnerships.includes(h.ownership_type)) {
+      uniqueOwnerships.push(h.ownership_type);
+    }
+  });
+  const ownership = uniqueOwnerships.sort();
+
+  const uniqueSpecialties: string[] = [];
+  hospitals.forEach((h) => {
+    if (h.specialties) {
+      h.specialties.forEach((spec) => {
+        if (!uniqueSpecialties.includes(spec)) {
+          uniqueSpecialties.push(spec);
+        }
+      });
+    }
+  });
+  const specialties = uniqueSpecialties.sort();
 
   const filteredHospitals = hospitals.filter((h) => {
     const matchesSearch =
       h.name.toLowerCase().includes(search.toLowerCase()) ||
       h.city.toLowerCase().includes(search.toLowerCase()) ||
       h.lga.toLowerCase().includes(search.toLowerCase());
-    const matchesOwnership = ownershipFilter ? h.ownership_type === ownershipFilter : true;
-    const matchesLga = lgaFilter ? h.lga === lgaFilter : true;
-    const matchesSpecialty = specialtyFilter ? h.specialties?.includes(specialtyFilter): true;
+    
+    let matchesOwnership = true;
+    if (ownershipFilter !== "") {
+      matchesOwnership = h.ownership_type === ownershipFilter;
+    }
+
+    let matchesLga = true;
+    if (lgaFilter !== "") {
+      matchesLga = h.lga === lgaFilter;
+    }
+
+    let matchesSpecialty = true;
+    if (specialtyFilter !== "") {
+      matchesSpecialty = h.specialties ? h.specialties.includes(specialtyFilter) : false;
+    }
+
     return matchesSearch && matchesOwnership && matchesLga && matchesSpecialty;
   });
 
   const selectedHospital = hospitals.find((h) => h.id === selectedId);
 
   function exportHospitals() {
-  const rows = filteredHospitals.map((h) => ({
-    name: h.name,
-    address: h.address,
-    city: h.city,
-    lga: h.lga,
-    specialties: h.specialties?.join(", "),
-    ownership: h.ownership_type,
-  }));
+  const rows = filteredHospitals.map((h) => {
+    return {
+      name: h.name,
+      address: h.address,
+      city: h.city,
+      lga: h.lga,
+      specialties: h.specialties ? h.specialties.join(", ") : "",
+      ownership: h.ownership_type,
+    };
+  });
 
   const csv = Papa.unparse(rows);
 
@@ -173,6 +217,14 @@ function getLocation(km = radius) {
 
   link.click();
 }
+
+  const uniqueLgas: string[] = [];
+  hospitals.forEach((h) => {
+    if (!uniqueLgas.includes(h.lga)) {
+      uniqueLgas.push(h.lga);
+    }
+  });
+  const sortedLgas = uniqueLgas.sort();
 
   return (
     <div className="flex flex-col" style={{ height: "100svh", overflow: "hidden" }}>
@@ -193,7 +245,7 @@ function getLocation(km = radius) {
             type="text"
             placeholder="Search hospitals…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
             style={{ background: "white", border: "1px solid var(--border)", color: "black" }}
           />
@@ -208,8 +260,8 @@ function getLocation(km = radius) {
               onClick={() => { setRadius(km); getLocation(km); }}
               className="text-xs px-2.5 py-2 transition"
               style={{
-                background: radius === km && userLocation ? "var(--accent-bg)" : "var(--code-bg)",
-                color: radius === km && userLocation ? "var(--accent)" : "var(--text)",
+                background: radius === km && userLocation !== null ? "var(--accent-bg)" : "var(--code-bg)",
+                color: radius === km && userLocation !== null ? "var(--accent)" : "var(--text)",
                 borderRight: km !== 50 ? "1px solid var(--accent-border)" : "none",
               }}
             >
@@ -227,7 +279,7 @@ function getLocation(km = radius) {
         {/* Ownership filter */}
         <select
           value={ownershipFilter}
-          onChange={(e) => setOwnershipFilter(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOwnershipFilter(e.target.value)}
           className="text-xs px-2.5 py-1.5 rounded-lg outline-none cursor-pointer"
           style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
         >
@@ -238,12 +290,12 @@ function getLocation(km = radius) {
         {/* LGA filter */}
         <select
           value={lgaFilter}
-          onChange={(e) => setLgaFilter(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLgaFilter(e.target.value)}
           className="text-xs px-2.5 py-1.5 rounded-lg outline-none cursor-pointer"
           style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
         >
           <option value="">All LGAs</option>
-          {[...new Set(hospitals.map((h) => h.lga))].sort().map((lga) => (
+          {sortedLgas.map((lga) => (
             <option key={lga} value={lga}>{lga}</option>
           ))}
         </select>
@@ -251,7 +303,7 @@ function getLocation(km = radius) {
         {/* Specialty filter */}
         <select
           value={specialtyFilter}
-          onChange={(e) => setSpecialtyFilter(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSpecialtyFilter(e.target.value)}
           className="text-xs px-2.5 py-1.5 rounded-lg outline-none cursor-pointer"
           style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
         >
@@ -267,7 +319,7 @@ function getLocation(km = radius) {
   type="email"
   placeholder="Recipient email"
   value={email}
-  onChange={(e) => setEmail(e.target.value)}
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
    className="pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
             style={{ background: "white", border: "1px solid var(--border)", color: "black" }}
 />
@@ -276,7 +328,7 @@ function getLocation(km = radius) {
           className="text-xs px-3 py-1.5 rounded-lg transition shrink-0"
           style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
   onClick={async () => {
-    if (!email) { alert("Enter a recipient email first."); return; }
+    if (email === "") { alert("Enter a recipient email first."); return; }
     if (selectedForEmail.length === 0) { alert("Select at least one hospital."); return; }
     try {
       const res = await fetch(
@@ -288,14 +340,14 @@ function getLocation(km = radius) {
             "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
-            email,
+            email: email,
             hospitalIds: selectedForEmail,
-            filters: { search, ownership: ownershipFilter, specialty: specialtyFilter, radius },
+            filters: { search: search, ownership: ownershipFilter, specialty: specialtyFilter, radius: radius },
           }),
         }
       );
       const json = await res.json();
-      if (json.success) {
+      if (json.success === true) {
         alert(`Email sent to ${email}`);
         setEmail("");
         setSelectedForEmail([]);
@@ -314,7 +366,7 @@ function getLocation(km = radius) {
 
         {/* Result count */}
         <span className="text-xs shrink-0" style={{ color: "var(--text)" }}>
-          {loading ? "Loading…" : `${filteredHospitals.length} hospital${filteredHospitals.length !== 1 ? "s" : ""}`}
+          {loading === true ? "Loading…" : `${filteredHospitals.length} hospital${filteredHospitals.length !== 1 ? "s" : ""}`}
         </span>
 
         {/* Export CSV */}
@@ -336,7 +388,7 @@ function getLocation(km = radius) {
         </button>
 
         {/* Clear all */}
-        {(search || ownershipFilter || lgaFilter || specialtyFilter || userLocation) && (
+        {search !== "" || ownershipFilter !== "" || lgaFilter !== "" || specialtyFilter !== "" || userLocation !== null ? (
           <button
             onClick={() => { setSearch(""); setOwnershipFilter(""); setLgaFilter(""); setSpecialtyFilter(""); setUserLocation(null); fetchHospitals(); }}
             className="text-xs px-3 py-1.5 rounded-lg transition shrink-0"
@@ -344,11 +396,11 @@ function getLocation(km = radius) {
           >
             ✕ Clear all
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* Location error banner */}
-      {locationError && (
+      {locationError !== null ? (
         <div
           className="px-6 py-3 text-sm flex items-center justify-between gap-4"
           style={{
@@ -365,7 +417,7 @@ function getLocation(km = radius) {
             Show all hospitals
           </button>
         </div>
-      )}
+      ) : null}
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
@@ -376,11 +428,19 @@ function getLocation(km = radius) {
         >
           {/* Scrollable list area */}
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+            <div className="flex justify-center">
+          <button
+          onClick={() => navigate("/admin")}
+          className="text-xs px-3 py-1.5 rounded-lg transition shrink-0"
+          style={{ background: "beige", border: "1px solid var(--border)", color: "black" }}
+><strong>
+Go to dashboard</strong>
+</button></div>
 
-          {loading ? (
-            Array.from({ length: 5 }).map((_, i) => (
+          {loading === true ? (
+            [1, 2, 3, 4, 5].map((item) => (
               <div
-                key={i}
+                key={item}
                 className="rounded-xl p-4 animate-pulse"
                 style={{ background: "var(--code-bg)", border: "1px solid var(--border)" }}
               >
@@ -461,13 +521,15 @@ function getLocation(km = radius) {
                       <input
   type="checkbox"
   checked={selectedForEmail.includes(h.id)}
-  onClick={(e) => e.stopPropagation()}
+  onClick={(e: React.MouseEvent<HTMLInputElement>) => e.stopPropagation()}
   onChange={() => {
-    setSelectedForEmail((prev) =>
-      prev.includes(h.id)
-        ? prev.filter((id) => id !== h.id)
-        : [...prev, h.id]
-    );
+    setSelectedForEmail((prev) => {
+      if (prev.includes(h.id)) {
+        return prev.filter((id) => id !== h.id);
+      } else {
+        return [...prev, h.id];
+      }
+    });
   }}
 />
                   </div>
@@ -490,7 +552,7 @@ function getLocation(km = radius) {
         <main className="hidden sm:block flex-1 relative" style={{ background: "var(--code-bg)" }}>
           <MapView hospitals={filteredHospitals} selectedId={selectedId} />
 
-          {selectedHospital && (
+          {selectedHospital ? (
             <div
               className="absolute bottom-6 left-1/2 -translate-x-1/2 w-80 rounded-2xl p-5 text-left z-10"
               style={{
@@ -544,7 +606,7 @@ function getLocation(km = radius) {
                 ✕ Close
               </button>
             </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

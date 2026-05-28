@@ -1,15 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Cream & Beige Scheme (Light Mode) */
-  --bg: #fdfaf2;           /* Soft rich cream background */
-  --text: #5c5449;         /* Deep taupe for readable body text */
-  --text-h: #2b251f;       /* Dark espresso for high-contrast headings */
-  --border: #e6dfd3;       /* Gentle beige border */
-  --code-bg: #f1ebd9;      /* Slightly darker beige for code blocks */
+  --bg: #fdfaf2;          
+  --text: #5c5449;        
+  --text-h: #2b251f;       
+  --border: #e6dfd3;      
+  --code-bg: #f1ebd9;      
 
-  /* Hazelnut / Latte Accent */
-  --accent: #a38a70;       /* Muted hazelnut beige */
+  --accent: #a38a70;      
   --accent-bg: rgba(163, 138, 112, 0.1);
   --accent-border: rgba(163, 138, 112, 0.35);
 
@@ -40,14 +38,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Cohesive Dark Cream / Dark Coffee Scheme */
-    --bg: #1a1613;           /* Dark espresso background */
-    --text: #e3dec3;         /* Creamy vanilla text */
-    --text-h: #faf6e8;       /* Bright milk cream for headings */
-    --border: #36302a;       /* Dark beige-brown border */
-    --code-bg: #26211c;      /* Deep roasted coffee background */
+    --bg: #1a1613;
+    --text: #e3dec3;
+    --text-h: #faf6e8;
+    --border: #36302a;
+    --code-bg: #26211c;
 
-    --accent: #c4b293;       /* Light warm beige accent */
+    --accent: #c4b293;
     --accent-bg: rgba(196, 178, 147, 0.12);
     --accent-border: rgba(196, 178, 147, 0.4);
 

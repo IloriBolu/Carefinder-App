@@ -8,48 +8,50 @@ type Hospital = {
   city: string;
   lga: string;
   address: string;
-  latitude: number;
-  longitude: number;
-  description: string;
-  rating: string;
-  phone: string;
+  latitude: number | null;
+  longitude: number | null;
+  description: string | null;
+  rating: string | null;
+  phone: string | null;
 };
 
 export default function HospitalDetail() {
-  const { id } = useParams();
+  const { id } = useParams<string>();
   const navigate = useNavigate();
   const [hospital, setHospital] = useState<Hospital | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    async function fetchHospital() {
-      const { data, error } = await supabase
-        .from("hospitals")
-        .select("*")
-        .eq("id", id)
-        .single();
+  async function fetchHospital() {
+    const { data, error } = await supabase
+      .from("hospitals")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-      if (error) {
-        console.error(error);
-        setLoading(false);
-        return;
-      }
-
-      setHospital(data);
+    if (error) {
+      console.log("Error fetching hospital:", error);
       setLoading(false);
+      return;
     }
 
+    if (data) {
+      setHospital(data);
+    } else {
+      setHospital(null);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     fetchHospital();
   }, [id]);
 
-  if (loading) {
+  if (loading === true) {
     return (
       <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
-        {/* Back bar skeleton */}
         <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="h-4 w-24 rounded animate-pulse" style={{ background: "var(--border)" }} />
         </div>
-        {/* Content skeleton */}
         <div className="max-w-2xl mx-auto w-full px-6 py-10 flex flex-col gap-4">
           <div className="h-8 w-3/4 rounded animate-pulse" style={{ background: "var(--border)" }} />
           <div className="h-4 w-full rounded animate-pulse" style={{ background: "var(--border)" }} />
@@ -60,13 +62,13 @@ export default function HospitalDetail() {
     );
   }
 
-  if (!hospital) {
+  if (hospital === null) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4" style={{ background: "var(--bg)" }}>
         <span className="text-5xl">🏥</span>
         <p className="text-base" style={{ color: "var(--text)" }}>Hospital not found.</p>
         <button
-          onClick={() => navigate("/hospitals")}
+          onClick={() => { navigate("/hospitals"); }}
           className="text-sm px-5 py-2 rounded-lg transition"
           style={{
             background: "var(--accent-bg)",
@@ -82,14 +84,12 @@ export default function HospitalDetail() {
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
-
-      {/* ── Top nav bar ── */}
       <header
         className="sticky top-0 z-10 px-6 py-4 flex items-center gap-3"
         style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}
       >
         <button
-          onClick={() => navigate("/hospitals")}
+          onClick={() => { navigate("/hospitals"); }}
           className="inline-flex items-center gap-1.5 text-sm transition"
           style={{ color: "var(--accent)" }}
         >
@@ -101,7 +101,6 @@ export default function HospitalDetail() {
       </header>
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-10 text-left">
-
         <span
           className="inline-flex items-center gap-1.5 mb-5 px-3 py-1 rounded-full text-xs font-medium"
           style={{
@@ -130,17 +129,16 @@ export default function HospitalDetail() {
           <Divider />
           <InfoRow icon="🏙" label="City" value={hospital.city} />
           <Divider />
-          <InfoRow icon="🏘" label="LGA" value={`${hospital.lga} LGA`} />
+          <InfoRow icon="🏘" label="LGA" value={hospital.lga + " " + "LGA"} />
           <Divider />
-          <InfoRow icon="📖" label="Description" value={hospital.description} />
+          <InfoRow icon="📖" label="Description" value={hospital.description ? hospital.description : "No description"} />
           <Divider />
-          <InfoRow icon="⭐" label="Star Rating" value={hospital.rating} />
-                    <Divider />
-          <InfoRow icon="📱" label="Phone number" value={hospital.phone} />
+          <InfoRow icon="⭐" label="Star Rating" value={hospital.rating ? hospital.rating : "No rating"} />
+          <Divider />
+          <InfoRow icon="📱" label="Phone number" value={hospital.phone ? hospital.phone : "No phone number"} />
         </div>
 
-        {/* Description */}
-        {hospital.description && (
+        {hospital.description ? (
           <div
             className="rounded-2xl p-6 mb-6"
             style={{
@@ -158,12 +156,12 @@ export default function HospitalDetail() {
               {hospital.description}
             </p>
           </div>
-        )}
+        ) : null}
 
         <div className="flex gap-3 flex-wrap">
-          {hospital.latitude && hospital.longitude && (
+          {hospital.latitude !== null && hospital.longitude !== null ? (
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${hospital.latitude},${hospital.longitude}`}
+              href={"https://www.google.com/maps/search/?api=1&query=" + hospital.latitude + "," + hospital.longitude}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-lg transition"
@@ -175,9 +173,9 @@ export default function HospitalDetail() {
             >
               Open in Google Maps
             </a>
-          )}
+          ) : null}
           <button
-            onClick={() => navigate("/hospitals")}
+            onClick={() => { navigate("/hospitals"); }}
             className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-lg transition"
             style={{
               background: "var(--code-bg)",
@@ -192,8 +190,6 @@ export default function HospitalDetail() {
     </div>
   );
 }
-
-/* ── Small helper components ── */
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
