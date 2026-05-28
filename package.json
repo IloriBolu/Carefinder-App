@@ -12,9 +12,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
     "mapbox-gl": "^3.24.0",
+    "papaparse": "^5.5.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -6,7 +6,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-[var(--border)] py-5 text-center text-xs text-[var(--text)]">
-        © {new Date().getFullYear()} Scissors. All rights reserved.
+        © {new Date().getFullYear()} Carefinder. All rights reserved.
       </footer>
     </div>
   );

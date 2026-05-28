@@ -19,7 +19,7 @@ type Props = {
   selectedId?: string | null;
 };
 
-export default function MapView({ hospitals, selectedId }: Props) {
+export default function MapView({ hospitals }: Props) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   // Store marker instances keyed by hospital id for easy lookup
@@ -105,27 +105,6 @@ export default function MapView({ hospitals, selectedId }: Props) {
     }
   }, [hospitals]);
 
-  // Fly to selected hospital and open its popup
-  useEffect(() => {
-    if (!map.current || !selectedId) return;
-
-    const marker = markersRef.current.get(selectedId);
-    if (!marker) return;
-
-    const lngLat = marker.getLngLat();
-
-    map.current.flyTo({
-      center: [lngLat.lng, lngLat.lat],
-      zoom: 15,
-      speed: 1.4,
-      curve: 1.2,
-    });
-
-    // Open the popup after the fly animation settles
-    map.current.once("moveend", () => {
-      marker.getPopup()?.addTo(map.current!);
-    });
-  }, [selectedId]);
 
   return <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />;
 }
