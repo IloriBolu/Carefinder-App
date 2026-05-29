@@ -430,12 +430,12 @@ function getLocation(km: number = radius) {
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
             <div className="flex justify-center">
           <button
-          onClick={() => navigate("/admin")}
           className="text-xs px-3 py-1.5 rounded-lg transition shrink-0"
           style={{ background: "beige", border: "1px solid var(--border)", color: "black" }}
-><strong>
-Go to dashboard</strong>
-</button></div>
+          onClick={() => navigate("/admin")}
+         ><strong>
+         Go to dashboard</strong>
+        </button></div>
 
           {loading === true ? (
             [1, 2, 3, 4, 5].map((item) => (

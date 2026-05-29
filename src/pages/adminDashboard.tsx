@@ -101,6 +101,18 @@ export default function AdminDashboard() {
           Back to Hospitals
         </button>
 
+        <button
+          onClick={() => navigate("/admin/moderation")}
+          className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg transition"
+          style={{
+            background: "grey",
+            border: "1px solid var(--border)",
+            color: "white",
+          }}
+        >
+          Review Moderations
+        </button>
+
         {/* Click handler to open the Add Modal */}
         <button
           onClick={() => { setShowAdd(true); }}

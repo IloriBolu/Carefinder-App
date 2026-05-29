@@ -98,7 +98,7 @@ export default function Home() {
             🏥 Browse Hospitals
           </button>
           <button
-            onClick={() => navigate("/hospitals")}
+            onClick={() => navigate("/login")}
             style={{
               padding: "13px 32px",
               borderRadius: "10px",
@@ -110,7 +110,23 @@ export default function Home() {
               border: "1px solid #e6dfd3",
             }}
           >
-            📍 Near Me
+            Login
+          </button>
+
+           <button
+            onClick={() => navigate("/signup")}
+            style={{
+              padding: "13px 32px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: 500,
+              cursor: "pointer",
+              background: "transparent",
+              color: "#5c5449",
+              border: "1px solid #e6dfd3",
+            }}
+          >
+            Signup
           </button>
         </div>
       </section>
@@ -136,7 +152,7 @@ export default function Home() {
               padding: "24px",
               borderRadius: "16px",
               background: "#f1ebd9",
-              border: "1px solid #e6dfd3",
+              border: "1px solid #000000ff",
             }}
           >
             <span style={{ fontSize: "28px", display: "block", marginBottom: "12px" }}>{f.icon}</span>
@@ -146,7 +162,6 @@ export default function Home() {
         ))}
       </section>
 
-      {/* ── CTA banner ── */}
       <section style={{
         margin: "0 24px 80px",
         borderRadius: "20px",

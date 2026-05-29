@@ -15,11 +15,26 @@ type Hospital = {
   phone: string | null;
 };
 
+type ReviewData = {
+  id: string;
+  hospital_id: string;
+  user_id: string;
+  rating: number;
+  review: string;
+  approved: boolean;
+};
+
 export default function HospitalDetail() {
   const { id } = useParams<string>();
   const navigate = useNavigate();
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [rating, setRating] = useState<number>(5);
+  const [review, setReview] = useState<string>("");
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviewCount, setReviewCount] = useState<number>(0);
+  
 
   async function fetchHospital() {
     const { data, error } = await supabase
@@ -42,8 +57,50 @@ export default function HospitalDetail() {
     setLoading(false);
   }
 
+  async function fetchReviews() {
+    if (id === undefined) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("hospital_id", id)
+      .eq("approved", true);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (data) {
+      const approvedReviews: ReviewData[] = data;
+      setReviews(approvedReviews);
+      setReviewCount(approvedReviews.length);
+
+      if (approvedReviews.length > 0) {
+        let total: number = 0;
+        approvedReviews.forEach((r) => {
+          total = total + r.rating;
+        });
+        setAverageRating(total / approvedReviews.length);
+      } else {
+        setAverageRating(0);
+      }
+    } else {
+      setReviews([]);
+      setReviewCount(0);
+      setAverageRating(0);
+    }
+  }
+
   useEffect(() => {
+    if (id === undefined) {
+      return;
+    }
+
     fetchHospital();
+    fetchReviews();
   }, [id]);
 
   if (loading === true) {
@@ -82,6 +139,35 @@ export default function HospitalDetail() {
     );
   }
 
+async function submitReview() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    alert("You must log in to review");
+    return;
+  }
+  const { error } = await supabase.from("reviews").insert({
+    hospital_id: hospital.id,
+    user_id: user.id,
+    rating,
+    review,
+  });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  alert("Review submitted!");
+
+  setReview("");
+  setRating(5);
+
+  fetchReviews();
+}
+
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
       <header
@@ -93,9 +179,6 @@ export default function HospitalDetail() {
           className="inline-flex items-center gap-1.5 text-sm transition"
           style={{ color: "var(--accent)" }}
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
           Back to hospitals
         </button>
       </header>
@@ -133,7 +216,7 @@ export default function HospitalDetail() {
           <Divider />
           <InfoRow icon="📖" label="Description" value={hospital.description ? hospital.description : "No description"} />
           <Divider />
-          <InfoRow icon="⭐" label="Star Rating" value={hospital.rating ? hospital.rating : "No rating"} />
+          <InfoRow icon="⭐" label="Rating" value={reviewCount > 0 ? averageRating.toFixed(1) + " / 5 (" + reviewCount + " review(s))" : "No reviews yet"}/>
           <Divider />
           <InfoRow icon="📱" label="Phone number" value={hospital.phone ? hospital.phone : "No phone number"} />
         </div>
@@ -158,7 +241,7 @@ export default function HospitalDetail() {
           </div>
         ) : null}
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap mb-10">
           {hospital.latitude !== null && hospital.longitude !== null ? (
             <a
               href={"https://www.google.com/maps/search/?api=1&query=" + hospital.latitude + "," + hospital.longitude}
@@ -186,6 +269,114 @@ export default function HospitalDetail() {
             ← Back to list
           </button>
         </div>
+
+        <Divider />
+
+        {/* --- STYLED REVIEWS SECTION --- */}
+        <section className="mt-10">
+          <h2 
+            className="font-semibold mb-6" 
+            style={{ color: "var(--text-h)", fontSize: "20px", letterSpacing: "-0.3px" }}
+          >
+            Community Reviews
+          </h2>
+
+          {/* Form Card */}
+          <div 
+            className="rounded-2xl p-6 mb-8 flex flex-col gap-4"
+            style={{
+              background: "var(--code-bg)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              Share your experience
+            </p>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Rating</label>
+              <select
+                value={rating}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setRating(Number(e.target.value))}
+                className="text-sm px-3 py-2.5 rounded-lg outline-none transition w-32"
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-h)",
+                }}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n} {n === 1 ? "Star" : "Stars"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Your Review</label>
+              <textarea
+                value={review}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReview(e.target.value)}
+                placeholder="How was your visit? Write your review here..."
+                rows={4}
+                className="text-sm p-4 rounded-xl outline-none transition resize-none w-full leading-relaxed"
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-h)",
+                }}
+              />
+            </div>
+
+            <button
+              onClick={submitReview}
+              className="inline-flex justify-center items-center text-sm font-medium px-5 py-2.5 rounded-lg transition self-start"
+              style={{
+                background: "var(--accent-bg)",
+                border: "1px solid var(--accent-border)",
+                color: "var(--accent)",
+              }}
+            >
+              Submit Review
+            </button>
+          </div>
+
+
+          <div className="flex flex-col gap-4">
+            {reviews.length === 0 ? (
+              <p className="text-sm text-center py-6" style={{ color: "var(--text)" }}>
+                No reviews yet. Be first to leave one
+              </p>
+            ) : (
+              reviews.map((r) => (
+                <div
+                  key={r.id}
+                  className="rounded-2xl p-5 flex flex-col gap-2"
+                  style={{
+                    background: "var(--code-bg)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>
+                      User {r.user_id ? r.user_id.slice(0, 8) : r.id.slice(0, 5)}...
+                    </span>
+                    <span 
+                      className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
+                    >
+                      ⭐ {r.rating}/5
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-h)" }}>
+                    {r.review}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
