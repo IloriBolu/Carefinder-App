@@ -7,10 +7,8 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function check() {
-      // 1. Get session
       const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
+      if (session === null) {
         console.log("[AdminRoute] No session");
         setStatus("denied");
         return;
@@ -18,7 +16,6 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
 
       console.log("[AdminRoute] Logged in as:", session.user.email, "id:", session.user.id);
 
-      // 2. Check admins table
       const { data, error } = await supabase
         .from("admins")
         .select("user_id")
@@ -27,7 +24,7 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
 
       console.log("[AdminRoute] admins query →", { data, error });
 
-      if (error || !data) {
+      if (error !== null || data === null) {
         setStatus("denied");
         return;
       }
@@ -41,7 +38,9 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
       check();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (status === "loading") {
@@ -53,10 +52,8 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
   }
 
   if (status === "denied") {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/admin/login" replace={true} />;
   }
 
   return <>{children}</>;
 }
-
-

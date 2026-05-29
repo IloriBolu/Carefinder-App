@@ -45,7 +45,6 @@ export default function AdminLogin() {
           boxShadow: "var(--shadow)",
         }}
       >
-        {/* ── Header Section ── */}
         <div className="text-center mb-8">
           <span className="text-4xl">🏥</span>
           <h1
@@ -58,8 +57,6 @@ export default function AdminLogin() {
             Sign in to access the dashboard
           </p>
         </div>
-
-        {/* ── Error Banner Alert ── */}
         {error !== null ? (
           <div
             className="mb-5 px-4 py-3 rounded-lg text-sm"
@@ -72,11 +69,7 @@ export default function AdminLogin() {
             ⚠️ {error}
           </div>
         ) : null}
-
-        {/* ── Sign In Form ── */}
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          
-          {/* Email Input Box */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>
               Email Address
@@ -95,8 +88,6 @@ export default function AdminLogin() {
               }}
             />
           </div>
-
-          {/* Password Input Box */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>
               Password
@@ -115,8 +106,6 @@ export default function AdminLogin() {
               }}
             />
           </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading === true}

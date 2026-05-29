@@ -1,8 +1,6 @@
-import { useState } from "react";
-// They likely import supabase directly from the package or basic helper file
+import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-// Defining types exactly how it's done in Slide 1/Everyday Types
 interface Hospital {
   id: string;
   name: string;
@@ -22,7 +20,6 @@ interface Props {
   onCancel: () => void;
 }
 
-// Inlined styles or a plain object because they are still mastering CSS-in-JS
 const inputStyle = {
   width: "100%",
   padding: "8px 12px",
@@ -49,8 +46,7 @@ export default function EditHospital({ hospital, onSuccess, onCancel }: Props) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -82,7 +78,7 @@ export default function EditHospital({ hospital, onSuccess, onCancel }: Props) {
 
     setLoading(false);
 
-    if (result.error) {
+    if (result.error !== null) {
       setError(result.error.message);
     } else {
       onSuccess();
@@ -103,17 +99,18 @@ export default function EditHospital({ hospital, onSuccess, onCancel }: Props) {
           maxHeight: "90svh",
         }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 style={{ color: "var(--text-h)", fontSize: "18px", margin: 0 }}>
             Edit Hospital
           </h2>
-          <button onClick={onCancel} style={{ ...inputStyle, width: "auto", padding: "6px 14px", cursor: "pointer" }}>
+          <button 
+            type="button" 
+            onClick={onCancel} 
+            style={{ ...inputStyle, width: "auto", padding: "6px 14px", cursor: "pointer" }}
+          >
             ✕ Cancel
           </button>
         </div>
-
-        {/* Error Notification */}
         {error !== null ? (
           <div className="mb-4 px-4 py-3 rounded-lg text-sm"
             style={{ background: "rgba(229,62,62,0.08)", border: "1px solid rgba(229,62,62,0.25)", color: "#c53030" }}>
@@ -125,28 +122,52 @@ export default function EditHospital({ hospital, onSuccess, onCancel }: Props) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Hospital Name *</label>
-            <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} required />
+            <input 
+              style={inputStyle} 
+              value={name} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} 
+              required 
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Address *</label>
-            <input style={inputStyle} value={address} onChange={(e) => setAddress(e.target.value)} required />
+            <input 
+              style={inputStyle} 
+              value={address} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)} 
+              required 
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium" style={{ color: "var(--text)" }}>City *</label>
-              <input style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} required />
+              <input 
+                style={inputStyle} 
+                value={city} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)} 
+                required 
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium" style={{ color: "var(--text)" }}>LGA *</label>
-              <input style={inputStyle} value={lga} onChange={(e) => setLga(e.target.value)} required />
+              <input 
+                style={inputStyle} 
+                value={lga} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLga(e.target.value)} 
+                required 
+              />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Ownership Type</label>
-            <select style={inputStyle} value={ownershipType} onChange={(e) => setOwnershipType(e.target.value)}>
+            <select 
+              style={inputStyle} 
+              value={ownershipType} 
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOwnershipType(e.target.value)}
+            >
               <option value="">Select…</option>
               <option value="Public">Government</option>
               <option value="Private">Private</option>
@@ -156,38 +177,58 @@ export default function EditHospital({ hospital, onSuccess, onCancel }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Latitude</label>
-              <input style={inputStyle} type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} />
+              <input 
+                style={inputStyle} 
+                type="number" 
+                step="any" 
+                value={latitude} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLatitude(e.target.value)} 
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Longitude</label>
-              <input style={inputStyle} type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} />
+              <input 
+                style={inputStyle} 
+                type="number" 
+                step="any" 
+                value={longitude} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLongitude(e.target.value)} 
+              />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Specialties — comma-separated</label>
-            <input style={inputStyle} value={specialties} onChange={(e) => setSpecialties(e.target.value)} />
+            <input 
+              style={inputStyle} 
+              value={specialties} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSpecialties(e.target.value)} 
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "var(--text)" }}>Description</label>
-            <textarea style={{ ...inputStyle, resize: "none" }} value={description}
-              onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <textarea 
+              style={{ ...inputStyle, resize: "none" }} 
+              value={description}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} 
+              rows={3} 
+            />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading === true}
             className="py-2.5 rounded-lg text-sm font-medium transition mt-2"
             style={{
-              background: loading ? "var(--accent-bg)" : "var(--accent)",
-              color: loading ? "var(--accent)" : "#fff",
+              background: loading === true ? "var(--accent-bg)" : "var(--accent)",
+              color: loading === true ? "var(--accent)" : "#fff",
               border: "1px solid var(--accent-border)",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
+              cursor: loading === true ? "not-allowed" : "pointer",
+              opacity: loading === true ? 0.7 : 1,
             }}
           >
-            {loading ? "Saving…" : "Save Changes"}
+            {loading === true ? "Saving…" : "Save Changes"}
           </button>
         </form>
       </div>

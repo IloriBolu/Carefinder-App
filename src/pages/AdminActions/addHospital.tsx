@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 interface AddHospitalProps {
@@ -24,6 +24,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    
     const specialtiesArray = specialties
       ? specialties.split(",").map((item) => item.trim())
       : [];
@@ -32,7 +33,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
     const lngValue = longitude ? parseFloat(longitude) : null;
 
     try {
-      const { error } = await supabase.from("hospitals").insert({
+      const { error: insertError } = await supabase.from("hospitals").insert({
         name: name.trim(),
         address: address.trim(),
         city: city.trim(),
@@ -44,8 +45,8 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
         description: description.trim() || null,
       });
 
-      if (error) {
-        setError(error.message);
+      if (insertError) {
+        setError(insertError.message);
       } else {
         setName("");
         setAddress("");
@@ -59,7 +60,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
         
         onSuccess();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Something went wrong");
     } finally {
       setLoading(false);
@@ -69,7 +70,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)", color:"white" }}
+      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)", color: "white" }}
     >
       <div
         className="w-full max-w-lg rounded-2xl p-6 overflow-y-auto"
@@ -80,8 +81,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
           maxHeight: "90svh",
         }}
       >
-        
-        {/* Header */}
+
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold" style={{ color: "var(--text-h)" }}>
             Add Hospital
@@ -96,12 +96,12 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
           </button>
         </div>
 
-        {error && (
+        {error !== null ? (
           <div className="mb-4 px-4 py-3 rounded-lg text-sm"
             style={{ background: "rgba(229,62,62,0.08)", border: "1px solid rgba(229,62,62,0.25)", color: "#c53030" }}>
             ⚠️ {error}
           </div>
-        )}
+        ) : null}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -110,7 +110,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
               type="text"
               className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
               value={name} 
-              onChange={(e) => setName(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} 
               required 
               placeholder="e.g. Lagos Island General Hospital" 
             />
@@ -122,7 +122,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
               type="text"
               className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
               value={address} 
-              onChange={(e) => setAddress(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)} 
               required 
               placeholder="e.g. 1 Hospital Road, Lagos Island" 
             />
@@ -135,7 +135,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
                 type="text"
                 className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
                 value={city} 
-                onChange={(e) => setCity(e.target.value)} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)} 
                 required 
                 placeholder="e.g. Lagos" 
               />
@@ -146,7 +146,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
                 type="text"
                 className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
                 value={lga} 
-                onChange={(e) => setLga(e.target.value)} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLga(e.target.value)} 
                 required 
                 placeholder="e.g. Lagos Island" 
               />
@@ -158,7 +158,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
             <select 
               className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
               value={ownershipType} 
-              onChange={(e) => setOwnershipType(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOwnershipType(e.target.value)}
             >
               <option value="">Select…</option>
               <option value="Public">Public</option>
@@ -174,7 +174,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
                 type="number" 
                 step="any" 
                 value={latitude} 
-                onChange={(e) => setLatitude(e.target.value)} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLatitude(e.target.value)} 
                 placeholder="e.g. 6.4550" 
               />
             </div>
@@ -185,7 +185,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
                 type="number" 
                 step="any" 
                 value={longitude} 
-                onChange={(e) => setLongitude(e.target.value)} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLongitude(e.target.value)} 
                 placeholder="e.g. 3.3841" 
               />
             </div>
@@ -197,7 +197,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
               type="text"
               className="w-full p-2.5 rounded-lg text-sm outline-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
               value={specialties} 
-              onChange={(e) => setSpecialties(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSpecialties(e.target.value)} 
               placeholder="Cardiology, Pediatrics, Surgery..." 
             />
           </div>
@@ -207,7 +207,7 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
             <textarea 
               className="w-full p-2.5 rounded-lg text-sm outline-none resize-none" style={{ background: "var(--code-bg)", border: "1px solid var(--border)", color: "var(--text-h)" }}
               value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} 
               placeholder="Brief description…" 
               rows={3} 
             />
@@ -215,21 +215,20 @@ export default function AddHospital({ onSuccess, onCancel }: AddHospitalProps) {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading === true}
             className="w-full py-2.5 rounded-lg text-sm font-medium transition mt-2"
             style={{
-              background: loading ? "var(--accent-bg)" : "var(--accent)",
-              color: loading ? "var(--accent)" : "#fff",
+              background: loading === true ? "var(--accent-bg)" : "var(--accent)",
+              color: loading === true ? "var(--accent)" : "#fff",
               border: "1px solid var(--accent-border)",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
+              cursor: loading === true ? "not-allowed" : "pointer",
+              opacity: loading === true ? 0.7 : 1,
             }}
           >
-            {loading ? "Saving…" : "Add Hospital"}
+            {loading === true ? "Saving…" : "Add Hospital"}
           </button>
         </form>
       </div>
     </div>
   );
 }
-

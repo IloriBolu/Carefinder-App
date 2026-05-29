@@ -72,8 +72,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
-
-      {/* ── Top Navigation Bar ── */}
       <header
         className="sticky top-0 z-10 px-6 py-4 flex items-center justify-between gap-4"
         style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}
@@ -88,7 +86,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Centre — back button */}
         <button
           onClick={() => navigate("/hospitals")}
           className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg transition"
@@ -112,8 +109,6 @@ export default function AdminDashboard() {
         >
           Review Moderations
         </button>
-
-        {/* Click handler to open the Add Modal */}
         <button
           onClick={() => { setShowAdd(true); }}
           className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg transition"
@@ -126,30 +121,22 @@ export default function AdminDashboard() {
            + Add Hospital
         </button>
       </header>
-
-      {/* ── Main Content Area ── */}
       <main className="flex-1 px-6 py-6 max-w-5xl w-full mx-auto">
-
-        {/* Stats Row Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
           
-          {/* Card 1: Total */}
+
           <div className="rounded-xl px-5 py-4" style={{ background: "var(--code-bg)", border: "1px solid var(--border)" }}>
             <p className="text-xs mb-1" style={{ color: "var(--text)" }}>Total Hospitals</p>
             <p className="text-2xl font-semibold" style={{ color: "var(--text-h)" }}>
               {loading === true ? "—" : hospitals.length}
             </p>
           </div>
-
-          {/* Card 2: Cities */}
           <div className="rounded-xl px-5 py-4" style={{ background: "var(--code-bg)", border: "1px solid var(--border)" }}>
             <p className="text-xs mb-1" style={{ color: "var(--text)" }}>Cities</p>
             <p className="text-2xl font-semibold" style={{ color: "var(--text-h)" }}>
               {loading === true ? "—" : uniqueCities.length}
             </p>
           </div>
-
-          {/* Card 3: LGAs */}
           <div className="rounded-xl px-5 py-4" style={{ background: "var(--code-bg)", border: "1px solid var(--border)" }}>
             <p className="text-xs mb-1" style={{ color: "var(--text)" }}>LGAs</p>
             <p className="text-2xl font-semibold" style={{ color: "var(--text-h)" }}>
@@ -158,14 +145,12 @@ export default function AdminDashboard() {
           </div>
 
         </div>
-
-        {/* Search Input Filter */}
         <div className="relative mb-4">
           <input
             type="text"
             placeholder="Search hospitals…"
             value={search}
-            onChange={(event) => { setSearch(event.target.value); }}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => { setSearch(event.target.value); }}
             className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm outline-none"
             style={{
               background: "var(--code-bg)",
@@ -174,11 +159,8 @@ export default function AdminDashboard() {
             }}
           />
         </div>
-
-        {/* Main Data Table */}
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-          
-          {/* Table Grid Headers */}
+
           <div
             className="grid text-xs font-medium px-4 py-3"
             style={{
@@ -194,13 +176,11 @@ export default function AdminDashboard() {
             <span>Ownership</span>
             <span className="text-right">Actions</span>
           </div>
-
-          {/* Table Body Content Rows */}
           <div className="divide-y" style={{ borderColor: "var(--border)" }}>
             
-            {/* checking if loading is true */}
+         
             {loading === true ? (
-              // Manual skeleton arrays because they aren't fully confident with shorthand Array generation
+
               [1, 2, 3, 4, 5].map((item) => (
                 <div
                   key={item}
@@ -228,7 +208,6 @@ export default function AdminDashboard() {
                   className="grid px-4 py-3 items-center text-sm transition hover:bg-[var(--code-bg)]"
                   style={{ gridTemplateColumns: "1fr 120px 120px 130px 120px" }}
                 >
-                  {/* Name and Address display */}
                   <div className="pr-4 min-w-0">
                     <p className="font-medium truncate" style={{ color: "var(--text-h)" }}>{hospital.name}</p>
                     <p className="text-xs truncate mt-0.5" style={{ color: "var(--text)" }}>{hospital.address}</p>
@@ -237,7 +216,7 @@ export default function AdminDashboard() {
                   <span className="text-xs truncate" style={{ color: "var(--text)" }}>{hospital.city}</span>
                   <span className="text-xs truncate" style={{ color: "var(--text)" }}>{hospital.lga}</span>
 
-                  {/* Ownership type label */}
+
                   <span>
                     <span
                       className="inline-flex text-xs px-2 py-0.5 rounded-full"
@@ -250,8 +229,6 @@ export default function AdminDashboard() {
                       {hospital.ownership_type ? hospital.ownership_type : "—"}
                     </span>
                   </span>
-
-                  {/* Action buttons (Edit & Delete) */}
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => { setEditTarget(hospital); }}
@@ -280,8 +257,6 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-
-          {/* Table Footer Stats */}
           {loading === false && filteredHospitals.length > 0 ? (
             <div
               className="px-4 py-3 text-xs"
@@ -296,8 +271,6 @@ export default function AdminDashboard() {
           ) : null}
         </div>
       </main>
-
-      {/* ── MODAL POPUPS FOR ADMIN ACTIONS ── */}
       {showAdd === true ? (
         <AddHospital
           onSuccess={() => { 
