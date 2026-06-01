@@ -19,24 +19,16 @@ type Hospital = {
 export default function Hospitals() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-
-  // State Management
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  
-  //filter stuff
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [ownershipFilter, setOwnershipFilter] = useState(searchParams.get("ownership") || "");
   const [lgaFilter, setLgaFilter] = useState(searchParams.get("lga") || "");
   const [specialtyFilter, setSpecialtyFilter] = useState(searchParams.get("specialty") || "");
-  
-  //location
   const [radius, setRadius] = useState(Number(searchParams.get("radius")) || 10);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  
-  //mailling
   const [selectedForEmail, setSelectedForEmail] = useState<string[]>([]);
   const [email, setEmail] = useState("");
 
@@ -85,31 +77,34 @@ export default function Hospitals() {
     }
   }, [userLocation, radius]);
 
-  function getLocation(km: number = radius) {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser.");
-      return;
-    }
-    setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setUserLocation({ lat, lng });
-      },
-      (err) => {
-        setLoading(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocationError("Location access was denied. Please allow it in settings.");
-        } else if (err.code === err.TIMEOUT) {
-          setLocationError("Location request timed out. Try again.");
-        } else {
-          setLocationError("Could not get your location. Try again.");
-        }
-      },
-      { timeout: 10000 }
-    );
+  function getLocation(km?: number) {
+  if (!navigator.geolocation) {
+    setLocationError("Geolocation is not supported by your browser.");
+    return;
   }
+  setLoading(true);
+  navigator.geolocation.getCurrentPosition(
+(pos) => {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  setUserLocation({ lat, lng });
+  console.log(`Finding hospitals within ${km || radius}km`); 
+},
+
+    (err) => {
+      setLoading(false);
+      if (err.code === err.PERMISSION_DENIED) {
+        setLocationError("Location access was denied. Please allow it in settings.");
+      } else if (err.code === err.TIMEOUT) {
+        setLocationError("Location request timed out. Try again.");
+      } else {
+        setLocationError("Could not get your location. Try again.");
+      }
+    },
+    { timeout: 10000 }
+  );
+}
+
 
   const ownership = Array.from(new Set(hospitals.map((h) => h.ownership_type))).sort();
   const sortedLgas = Array.from(new Set(hospitals.map((h) => h.lga))).sort();
@@ -180,7 +175,7 @@ export default function Hospitals() {
           {[5, 10, 25, 50].map((km) => (
             <button
               key={km}
-              onClick={() => { setRadius(km); getLocation(km); }}
+              onClick={() => { setRadius(km); getLocation(); }}
               className="text-xs px-2.5 py-2 transition"
               style={{
                 background: radius === km && userLocation !== null ? "var(--accent-bg)" : "var(--code-bg)",
