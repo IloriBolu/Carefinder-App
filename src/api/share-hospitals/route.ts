@@ -2,35 +2,48 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 
-// ── Supabase (server-side) ──
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ── Resend ──
 const resend = new Resend(process.env.RESEND_API_KEY!);
+
+interface Hospital {
+  name: string;
+  address: string;
+  city: string;
+  lga: string;
+  specialties: string[] | null;
+}
+
+interface RequestBody {
+  email?: string;
+  hospitalIds?: string[];
+  filters?: {
+    search?: string;
+    city?: string;
+    specialty?: string;
+    radius?: string | number;
+  };
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: RequestBody = await request.json();
     const { email, hospitalIds, filters } = body;
-
-    // ── validation ──
-    if (!email || !Array.isArray(hospitalIds) || hospitalIds.length === 0) {
+    if (email === undefined || !Array.isArray(hospitalIds) || hospitalIds.length === 0) {
       return NextResponse.json(
         { error: "Email and hospital selection are required." },
         { status: 400 }
       );
     }
-
-    // ── fetch hospitals from Supabase ──
     const { data: hospitals, error } = await supabase
       .from("hospitals")
-      .select("*")
+      .select("name, address, city, lga, specialties")
       .in("id", hospitalIds);
 
-    if (error) {
+    if (error !== null) {
       console.error("Supabase error:", error);
       return NextResponse.json(
         { error: "Failed to fetch hospitals." },
@@ -38,8 +51,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── build HTML email ──
-    const hospitalListHtml = (hospitals || [])
+    const hospitalList: Hospital[] = hospitals || [];
+    const hospitalListHtml = hospitalList
       .map(
         (h) => `
         <div style="padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:12px">
@@ -49,7 +62,7 @@ export async function POST(request: Request) {
             ${h.city} • ${h.lga}
           </p>
           <p style="margin:0;font-size:12px;color:#888">
-            Specialties: ${(h.specialties || []).join(", ") || "N/A"}
+            Specialties: ${Array.isArray(h.specialties) && h.specialties.length > 0 ? h.specialties.join(", ") : "N/A"}
           </p>
         </div>
       `
@@ -73,8 +86,6 @@ export async function POST(request: Request) {
         </p>
       </div>
     `;
-
-    // ── send email via Resend ──
     const result = await resend.emails.send({
       from: "CareFinder <onboarding@resend.dev>",
       to: email,
@@ -87,13 +98,14 @@ export async function POST(request: Request) {
       message: "Email sent successfully",
       data: result,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Route error:", err);
+    const errorMessage = err instanceof Error ? err.message : "Internal server error";
 
     return NextResponse.json(
       {
         success: false,
-        error: err.message || "Internal server error",
+        error: errorMessage,
       },
       { status: 500 }
     );

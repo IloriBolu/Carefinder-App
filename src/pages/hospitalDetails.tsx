@@ -24,7 +24,6 @@ type ReviewData = {
   approved: boolean;
 };
 
-// Extracted Sub-Components to optimize DOM updates
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
@@ -44,18 +43,12 @@ function Divider() {
 export default function HospitalDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  // Component States
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
-  // User Form Submission States
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
-
-  // Fetch Hospital Core Profile details
   const fetchHospital = useCallback(async () => {
     if (!id) return;
     
@@ -73,8 +66,6 @@ export default function HospitalDetail() {
     }
     setLoading(false);
   }, [id]);
-
-  // Fetch verified user reviews
   const fetchReviews = useCallback(async () => {
     if (!id) return;
 
@@ -91,20 +82,15 @@ export default function HospitalDetail() {
     }
   }, [id]);
 
-  // Aggregate initialization handler
   useEffect(() => {
     setLoading(true);
     fetchHospital();
     fetchReviews();
   }, [id, fetchHospital, fetchReviews]);
-
-  // Calculate rating metrics on-the-fly from active local memory state
   const totalReviews = reviews.length;
   const averageRating = totalReviews > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1) 
     : "No reviews yet";
-
-  // Form Submission Controller
   async function submitReview(e: React.FormEvent) {
     e.preventDefault();
     if (!hospital) return;
@@ -208,8 +194,6 @@ export default function HospitalDetail() {
           <Divider />
           <InfoRow icon="📱" label="Phone line" value={hospital.phone || "Not listed"} />
         </div>
-
-        {/* Unified description summary platform */}
         {hospital.description && (
           <div className="rounded-2xl p-6 mb-6" style={{ background: "var(--code-bg)", border: "1px solid var(--border)" }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>About Facility</p>
@@ -239,8 +223,6 @@ export default function HospitalDetail() {
         </div>
 
         <Divider />
-
-        {/* Reviews workspace content section */}
         <section className="mt-10">
           <h2 className="font-semibold mb-6" style={{ color: "var(--text-h)", fontSize: "20px", letterSpacing: "-0.3px" }}>
             Community Feedback
@@ -285,8 +267,6 @@ export default function HospitalDetail() {
               {submitting ? "Submitting..." : "Submit Review"}
             </button>
           </form>
-
-          {/* Render Active Reviews */}
           <div className="flex flex-col gap-4">
             {totalReviews === 0 ? (
               <p className="text-sm text-center py-6 italic" style={{ color: "var(--text)" }}>No verified reviews left yet.</p>

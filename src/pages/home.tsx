@@ -5,8 +5,6 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: "100svh", background: "#fdfaf2", fontFamily: "system-ui, 'Segoe UI', sans-serif" }}>
-
-      {/* ── Navbar ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 10,
         padding: "16px 32px",
@@ -35,8 +33,6 @@ export default function Home() {
           Find Hospitals →
         </button>
       </nav>
-
-      {/* ── Hero ── */}
       <section style={{
         maxWidth: "720px",
         margin: "0 auto",
@@ -130,8 +126,6 @@ export default function Home() {
           </button>
         </div>
       </section>
-
-      {/* ── Feature cards ── */}
       <section style={{
         maxWidth: "960px",
         margin: "0 auto",
@@ -194,8 +188,6 @@ export default function Home() {
           Get Started →
         </button>
       </section>
-
-      {/* ── Footer ── */}
       <footer style={{
         borderTop: "1px solid #e6dfd3",
         padding: "24px",

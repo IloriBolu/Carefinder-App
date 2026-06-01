@@ -10,8 +10,6 @@ type Review = {
   created_at: string;
   hospitals: { name: string } | null;
 };
-
-// Fixed: Moved helper component outside parent to prevent re-creation lag
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5 text-sm">
@@ -29,8 +27,6 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function Moderation() {
   const navigate = useNavigate();
-  
-  // State Management
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -68,7 +64,6 @@ export default function Moderation() {
       console.error(`Failed to ${action} review:`, error);
       alert(`Could not complete action. Please try again.`);
     } else {
-      // Optimistically remove the review from state without making a second database trip
       setReviews((prev) => prev.filter((review) => review.id !== id));
     }
     
@@ -78,7 +73,7 @@ export default function Moderation() {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
 
-      {/* Header Room */}
+      {/* Header */}
       <header
         className="sticky top-0 z-10 px-6 py-4 flex items-center justify-between"
         style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}
@@ -106,8 +101,6 @@ export default function Moderation() {
           {loading ? "Loading…" : `${reviews.length} pending`}
         </span>
       </header>
-
-      {/* Main Container Workspace */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-8">
         {loading ? (
           <div className="flex flex-col gap-4">
